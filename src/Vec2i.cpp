@@ -1,14 +1,31 @@
 class Vec2i
 {
 public:
+    Vec2i() = default;
+    Vec2i(int xx, int yy)
+    {
+        x = xx;
+        y = yy;
+    }
+    Vec2i(Direction dir)
+    {
+        if (dir == Direction::down)
+            Vec2i(0, 1);
+        else if (dir == Direction::up)
+            Vec2i(0, -1);
+        else if (dir == Direction::right)
+            Vec2i(1, 0);
+        else if (dir == Direction::left)
+            Vec2i(-1, 0);
+
+        Vec2i();
+    }
+
     int x;
     int y;
     Vec2i add(Vec2i other)
     {
-        return {
-            x : x + other.x,
-            y : y + other.y
-        };
+        return Vec2i(x + other.x, y + other.y);
     }
     bool inScreenBounds(int xMax, int yMax)
     {
