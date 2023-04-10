@@ -32,7 +32,7 @@ public:
 
   Vec2i bottom()
   {
-    return position.add({x : 0, y : size});
+    return position.add(Vec2i(0, size));
   }
 
   void update()
@@ -56,16 +56,16 @@ void gameUpdate();
 
 void resetGame()
 {
-  ballPosition = {x : 0, y : 0};
-  ballVelocity = {x : 1, y : 1};
+  ballPosition = Vec2i(0, 0);
+  ballVelocity = Vec2i(1, 1);
   paddleRight = {
-    position : {x : NUM_COLS - 1, y : 10},
-    velocity : {x : 0, y : 0},
+    position : Vec2i(NUM_LEDS - 1, 10),
+    velocity : Vec2i(0, 0),
     size : 6,
   };
   paddleLeft = {
-    position : {x : 0, y : 10},
-    velocity : {x : 0, y : 0},
+    position : Vec2i(0, 10),
+    velocity : Vec2i(0, 0),
     size : 6,
   };
 }
@@ -97,43 +97,37 @@ void setup_routing()
   server.on(
       "/playerLeft/up", []()
       { paddleLeft.velocity = {
-          x : 0,
-          y : -1,
+        Vec2i(0, -1),
         }; 
         server.send(200, "text/plain", "success"); });
   server.on(
       "/playerLeft/release", []()
       { paddleLeft.velocity = {
-          x : 0,
-          y : 0,
+        Vec2i(0,0 ),
         }; 
         server.send(200, "text/plain", "success"); });
   server.on(
       "/playerLeft/down", []()
       { paddleLeft.velocity = {
-          x : 0,
-          y : 1,
+        Vec2i(0,1 ),
         }; 
         server.send(200, "text/plain", "success"); });
   server.on(
       "/playerRight/up", []()
       { paddleRight.velocity = {
-          x : 0,
-          y : -1,
+        Vec2i(0, -1),
         }; 
         server.send(200, "text/plain", "success"); });
   server.on(
       "/playerRight/release", []()
       { paddleRight.velocity = {
-          x : 0,
-          y : 0,
+        Vec2i(0,0),
         };
         server.send(200, "text/plain", "success"); });
   server.on(
       "/playerRight/down", []()
       { paddleRight.velocity = {
-          x : 0,
-          y : 1,
+        Vec2i(0,1 ),
         };
         server.send(200, "text/plain", "success"); });
   server.begin();
