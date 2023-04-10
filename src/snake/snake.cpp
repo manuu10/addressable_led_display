@@ -1,4 +1,5 @@
 #include "../Vec2i.cpp"
+#include "FastLED.h"
 #include "vector"
 
 enum Direction
@@ -29,6 +30,9 @@ public:
             segments[i].follow(segments[i - 1]);
         }
         segments[0].moveBy(Vec2i(dir));
+    }
+    void draw(CRGB *leds)
+    {
     }
 
     void changeDirection(Direction d)
