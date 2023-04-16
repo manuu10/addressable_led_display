@@ -3,6 +3,8 @@
 #include "./food.cpp";
 #include <FastLED.h>
 
+#ifndef SNAKEGH
+#define SNAKEGH
 class SnakeGame
 {
 public:
@@ -15,10 +17,17 @@ public:
 
     void update()
     {
+        snake.update();
+        if (snake.head().loc() == food.loc())
+        {
+            snake.increaseSize();
+            food.newPosition();
+        }
     }
 
-    void draw(CRGB *leds)
+    void draw(void (*painter)(int, int, CRGB))
     {
+        snake.draw(painter);
     }
 
 private:
@@ -26,3 +35,5 @@ private:
     Snake snake;
     Food food;
 };
+
+#endif

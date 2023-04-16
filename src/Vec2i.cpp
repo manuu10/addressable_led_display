@@ -1,3 +1,7 @@
+#include "direction.cpp"
+#ifndef VEC2H
+#define VEC2H
+
 class Vec2i
 {
 public:
@@ -27,6 +31,14 @@ public:
     {
         return Vec2i(x + other.x, y + other.y);
     }
+    Vec2i sub(Vec2i other)
+    {
+        return Vec2i(x - other.x, y - other.y);
+    }
+    bool operator==(Vec2i other)
+    {
+        return x == other.x && y == other.y;
+    }
     bool inScreenBounds(int xMax, int yMax)
     {
         return x >= 0 && y >= 0 && y < yMax && x < xMax;
@@ -48,3 +60,5 @@ public:
         return y < 0;
     }
 };
+
+#endif
