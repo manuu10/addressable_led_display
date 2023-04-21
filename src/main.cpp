@@ -1,5 +1,8 @@
 #include <FastLED.h>
 #include <Vec2i.cpp>
+#include <snake/snake_game.cpp>
+#include <pong/pong.cpp>
+#include <start_screens/start_screens.cpp>
 #include <app_config.cpp>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
@@ -20,55 +23,21 @@ CRGB leds[NUM_LEDS];
 const char *SSID = AppConfig::WIFI_SSID;
 const char *PWD = AppConfig::WIFI_PW;
 
+enum GameType
+{
+  snek,
+  peng,
+};
+SnakeGame snakeGame;
+PongGame pongGame;
+GameType currentGame = GameType::peng;
+
 ESP8266WebServer server(80);
 String newHostname = "awesome-led-matrix";
 
-class PlayerPaddle
-{
-public:
-  Vec2i position;
-  Vec2i velocity;
-  int size;
-
-  Vec2i bottom()
-  {
-    return position.add(Vec2i(0, size));
-  }
-
-  void update()
-  {
-    Vec2i newPos = position.add(velocity);
-    if (newPos.inScreenBounds(NUM_COLS, NUM_ROWS))
-    {
-      position = newPos;
-    }
-  }
-};
-
-Vec2i ballPosition;
-Vec2i ballVelocity;
-
-PlayerPaddle paddleLeft;
-PlayerPaddle paddleRight;
-
 void gameDraw();
 void gameUpdate();
-
-void resetGame()
-{
-  ballPosition = Vec2i(0, 0);
-  ballVelocity = Vec2i(1, 1);
-  paddleRight = {
-    position : Vec2i(NUM_LEDS - 1, 10),
-    velocity : Vec2i(0, 0),
-    size : 6,
-  };
-  paddleLeft = {
-    position : Vec2i(0, 10),
-    velocity : Vec2i(0, 0),
-    size : 6,
-  };
-}
+void gameDrawIntros();
 
 void connect_to_wifi()
 {
@@ -85,77 +54,50 @@ void connect_to_wifi()
   {
     Serial.print(".");
     delay(500);
-    // we can even make the ESP32 to sleep
   }
 
   Serial.print("Connected. IP: ");
   Serial.println(WiFi.localIP());
 }
 
-void setup_routing()
+void onDoPlayerInput()
 {
-  server.on(
-      "/playerLeft/up", []()
-      { paddleLeft.velocity = {
-        Vec2i(0, -1),
-        }; 
-        server.send(200, "text/plain", "success"); });
-  server.on(
-      "/playerLeft/release", []()
-      { paddleLeft.velocity = {
-        Vec2i(0,0 ),
-        }; 
-        server.send(200, "text/plain", "success"); });
-  server.on(
-      "/playerLeft/down", []()
-      { paddleLeft.velocity = {
-        Vec2i(0,1 ),
-        }; 
-        server.send(200, "text/plain", "success"); });
-  server.on(
-      "/playerRight/up", []()
-      { paddleRight.velocity = {
-        Vec2i(0, -1),
-        }; 
-        server.send(200, "text/plain", "success"); });
-  server.on(
-      "/playerRight/release", []()
-      { paddleRight.velocity = {
-        Vec2i(0,0),
-        };
-        server.send(200, "text/plain", "success"); });
-  server.on(
-      "/playerRight/down", []()
-      { paddleRight.velocity = {
-        Vec2i(0,1 ),
-        };
-        server.send(200, "text/plain", "success"); });
-  server.begin();
+  String player = "";
+  String input = "";
+  for (int i = 0; i < server.args(); i++)
+  {
+    if (server.argName(i) == "player")
+      player = server.arg(i);
+    if (server.argName(i) == "input")
+      input = server.arg(i);
+  }
+  snakeGame.onPlayerInput(player, input);
+  pongGame.onPlayerInput(player, input);
 }
 
-void setup()
+void onSwitchGame()
 {
-  resetGame();
-  delay(3000); // 3 second delay for recovery
-  connect_to_wifi();
-  setup_routing();
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.setBrightness(BRIGHTNESS);
-}
-
-void loop()
-{
-  server.handleClient();
-  gameDraw();
-  FastLED.show();
-  FastLED.delay(1000 / FRAMES_PER_SECOND);
-  EVERY_N_MILLISECONDS(100) { gameUpdate(); } // slowly cycle the "base color" through the rainbow
+  String game = "";
+  for (int i = 0; i < server.args(); i++)
+  {
+    if (server.argName(i) == "game")
+      game = server.arg(i);
+  }
+  if (game == "snake")
+  {
+    currentGame = GameType::snek;
+  }
+  if (game == "pong")
+  {
+    currentGame = GameType::peng;
+  }
 }
 
 void paintPixelAt(int x, int y, CRGB color)
 {
   if (y % 2 != 0)
   {
+
     x = (NUM_COLS - 1) - x;
   }
 
@@ -166,41 +108,54 @@ void paintPixelAt(int x, int y, CRGB color)
   }
 }
 
+void setup_routing()
+{
+
+  server.on("/doPlayerInput", HTTP_GET, onDoPlayerInput);
+  server.on("/switchGame", HTTP_GET, onSwitchGame);
+  server.begin();
+}
+
+void setup()
+{
+  Serial.begin(9600);
+  snakeGame = SnakeGame(Vec2i(NUM_COLS, NUM_ROWS));
+  pongGame = PongGame(Vec2i(NUM_COLS, NUM_ROWS));
+  delay(3000); // 3 second delay for recovery
+  connect_to_wifi();
+  setup_routing();
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.setBrightness(BRIGHTNESS);
+  Serial.println("setup done");
+}
+
+void loop()
+{
+  server.handleClient();
+  gameDraw();
+  gameDrawIntros();
+  FastLED.show();
+  FastLED.delay(1000 / FRAMES_PER_SECOND);
+  EVERY_N_MILLISECONDS(100) { gameUpdate(); }
+}
+
 void gameDraw()
 {
   fadeToBlackBy(leds, NUM_LEDS, 255);
-  paintPixelAt(ballPosition.x, ballPosition.y, CRGB::Green);
-  for (int i = 0; i < paddleLeft.size; i++)
-  {
-    paintPixelAt(paddleLeft.position.x, paddleLeft.position.y + i, CRGB::Red);
-  }
-  for (int i = 0; i < paddleRight.size; i++)
-  {
-    paintPixelAt(paddleRight.position.x, paddleRight.position.y + i, CRGB::Blue);
-  }
+  if (currentGame == GameType::peng)
+    pongGame.draw(paintPixelAt);
+  if (currentGame == GameType::snek)
+    snakeGame.draw(paintPixelAt);
 }
 
 void gameUpdate()
 {
-  ballPosition = ballPosition.add(ballVelocity);
-  if (ballPosition.outOfBottomEdge(NUM_ROWS) || ballPosition.outOfTopEdge())
-  {
-    ballVelocity.y *= -1;
-  }
-  if (ballPosition.outOfRightEdge(NUM_COLS) || ballPosition.outOfLeftEdge())
-  {
-    resetGame();
-    delay(2000);
-    return;
-  }
+  if (currentGame == GameType::peng)
+    pongGame.update();
+  if (currentGame == GameType::snek)
+    snakeGame.update();
+}
 
-  paddleLeft.update();
-  paddleRight.update();
-
-  if (
-      (ballPosition.x == paddleLeft.position.x && ballPosition.y >= paddleLeft.position.y && ballPosition.y <= paddleLeft.bottom().y) ||
-      (ballPosition.x == paddleRight.position.x && ballPosition.y >= paddleRight.position.y && ballPosition.y <= paddleRight.bottom().y))
-  {
-    ballVelocity.x *= -1;
-  }
+void gameDrawIntros()
+{
 }

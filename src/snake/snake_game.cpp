@@ -8,6 +8,7 @@
 class SnakeGame
 {
 public:
+    SnakeGame() = default;
     SnakeGame(Vec2i size)
     {
         boardSize = size;
@@ -28,6 +29,17 @@ public:
     void draw(void (*painter)(int, int, CRGB))
     {
         snake.draw(painter);
+    }
+    void onPlayerInput(String player, String input)
+    {
+        if (input == "left")
+            snake.changeDirection(Direction::left);
+        else if (input == "right")
+            snake.changeDirection(Direction::right);
+        else if (input == "up")
+            snake.changeDirection(Direction::up);
+        else if (input == "down")
+            snake.changeDirection(Direction::down);
     }
 
 private:

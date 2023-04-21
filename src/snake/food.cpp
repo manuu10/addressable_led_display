@@ -1,5 +1,5 @@
-#include "../Vec2i.cpp";
-#include <random>
+#include "../Vec2i.cpp"
+#include <FastLED.h>
 #ifndef FOODH
 #define FOODH
 class Food
@@ -24,11 +24,7 @@ public:
 
     void newPosition()
     {
-        std::random_device dev;
-        std::mt19937 rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> distX(0, rangeX);
-        std::uniform_int_distribution<std::mt19937::result_type> distY(0, rangeY);
-        Food(Vec2i(distX(rng), distY(rng)));
+        Food(Vec2i(random(0, rangeX), random(0, rangeY)));
     }
     void draw(void (*painter)(int, int, CRGB))
     {
