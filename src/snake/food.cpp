@@ -24,7 +24,7 @@ public:
 
     void newPosition()
     {
-        Food(Vec2i(random(0, rangeX), random(0, rangeY)));
+        location = Vec2i(random(0, rangeX), random(0, rangeY));
     }
     void draw(void (*painter)(int, int, CRGB))
     {

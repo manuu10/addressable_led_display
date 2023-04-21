@@ -19,6 +19,8 @@ public:
     void moveBy(Vec2i velocity)
     {
         location = location.add(velocity);
+        Serial.print("x:" + velocity.x);
+        Serial.println("y:" + velocity.y);
     }
     Vec2i loc()
     {
@@ -35,9 +37,9 @@ public:
     Snake()
     {
         segments = {
-            SnakeSegment(Vec2i(3, 0)),
-            SnakeSegment(Vec2i(2, 0)),
-            SnakeSegment(Vec2i(1, 0)),
+            SnakeSegment(Vec2i(3, 2)),
+            SnakeSegment(Vec2i(2, 2)),
+            SnakeSegment(Vec2i(1, 2)),
         };
         dir = Direction::right;
     }
@@ -48,7 +50,7 @@ public:
         {
             segments[i].follow(segments[i - 1]);
         }
-        segments[0].moveBy(Vec2i(dir));
+        segments[0].moveBy(Vec2i::fromDir(dir));
     }
 
     void increaseSize()
@@ -61,9 +63,9 @@ public:
     }
     void draw(void (*painter)(int, int, CRGB))
     {
-        for (size_t i = segments.size() - 1; i >= 0; i--)
+        for (size_t i = 0; i < segments.size(); i++)
         {
-            auto loc = segments[i].loc();
+            Vec2i loc = segments[i].loc();
             painter(loc.x, loc.y, CRGB::Blue);
         }
     }

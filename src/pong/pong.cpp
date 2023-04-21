@@ -44,14 +44,15 @@ public:
             rightPlayer.handleInput(input);
     }
 
-private:
     void reset()
     {
         leftPlayer = PlayerPaddle(Vec2i(0, 4), 5, CRGB::Red);
         rightPlayer = PlayerPaddle(Vec2i(boardSize.x - 1, 4), 5, CRGB::Blue);
         ball = Ball(Vec2i(0, 0), CRGB::Green);
     }
-    PlayerPaddle leftPlayer;
+
+private:
+        PlayerPaddle leftPlayer;
     PlayerPaddle rightPlayer;
     Ball ball;
     Vec2i boardSize;

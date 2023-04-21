@@ -24,11 +24,16 @@ public:
             snake.increaseSize();
             food.newPosition();
         }
+        if (!snake.head().loc().inScreenBounds(boardSize.x, boardSize.y))
+        {
+            reset();
+        }
     }
 
     void draw(void (*painter)(int, int, CRGB))
     {
         snake.draw(painter);
+        food.draw(painter);
     }
     void onPlayerInput(String player, String input)
     {
@@ -40,6 +45,12 @@ public:
             snake.changeDirection(Direction::up);
         else if (input == "down")
             snake.changeDirection(Direction::down);
+    }
+
+    void reset()
+    {
+        snake = Snake();
+        food.newPosition();
     }
 
 private:

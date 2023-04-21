@@ -11,18 +11,18 @@ public:
         x = xx;
         y = yy;
     }
-    Vec2i(Direction dir)
+    static Vec2i fromDir(Direction dir)
     {
         if (dir == Direction::down)
-            Vec2i(0, 1);
+            return Vec2i(0, 1);
         else if (dir == Direction::up)
-            Vec2i(0, -1);
+            return Vec2i(0, -1);
         else if (dir == Direction::right)
-            Vec2i(1, 0);
+            return Vec2i(1, 0);
         else if (dir == Direction::left)
-            Vec2i(-1, 0);
+            return Vec2i(-1, 0);
 
-        Vec2i();
+        return Vec2i(0, 0);
     }
 
     int x;

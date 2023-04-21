@@ -30,10 +30,12 @@ enum GameType
 };
 SnakeGame snakeGame;
 PongGame pongGame;
-GameType currentGame = GameType::peng;
+GameType currentGame = GameType::snek;
 
 ESP8266WebServer server(80);
 String newHostname = "awesome-led-matrix";
+
+bool showIntro = true;
 
 void gameDraw();
 void gameUpdate();
@@ -71,25 +73,35 @@ void onDoPlayerInput()
     if (server.argName(i) == "input")
       input = server.arg(i);
   }
+  Serial.println("onInput?player=" + player + ";;input=" + input);
   snakeGame.onPlayerInput(player, input);
   pongGame.onPlayerInput(player, input);
+
+  server.send(200, "text/plain", "ok");
 }
 
 void onSwitchGame()
 {
+  Serial.println("switching game");
   String game = "";
   for (int i = 0; i < server.args(); i++)
   {
     if (server.argName(i) == "game")
       game = server.arg(i);
   }
+  Serial.println("to => " + game);
+  server.send(200, "text/plain", "ok");
   if (game == "snake")
   {
     currentGame = GameType::snek;
+    showIntro = true;
+    // snakeGame.reset();
   }
   if (game == "pong")
   {
     currentGame = GameType::peng;
+    showIntro = true;
+    pongGame.reset();
   }
 }
 
@@ -150,6 +162,8 @@ void gameDraw()
 
 void gameUpdate()
 {
+  if (showIntro)
+    return;
   if (currentGame == GameType::peng)
     pongGame.update();
   if (currentGame == GameType::snek)
@@ -158,4 +172,31 @@ void gameUpdate()
 
 void gameDrawIntros()
 {
+  if (showIntro)
+  {
+    fadeToBlackBy(leds, NUM_LEDS, 255);
+    StartScreens::playPongIntro(paintPixelAt);
+    FastLED.show();
+    delay(500);
+    fadeToBlackBy(leds, NUM_LEDS, 255);
+    FastLED.show();
+    delay(500);
+
+    StartScreens::playPongIntro(paintPixelAt);
+    FastLED.show();
+    delay(500);
+    fadeToBlackBy(leds, NUM_LEDS, 255);
+    FastLED.show();
+    delay(500);
+
+    StartScreens::playPongIntro(paintPixelAt);
+    FastLED.show();
+    delay(1500);
+
+    gameDraw();
+    FastLED.show();
+    delay(500);
+
+    showIntro = false;
+  }
 }
